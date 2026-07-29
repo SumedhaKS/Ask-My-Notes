@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.middleware.cors import CORSMiddleware
 import shutil
 import os
@@ -22,7 +22,7 @@ def health_check():
     return {"message": "Good"}
 
 @app.post("/upload")
-async def upload_document(file: UploadFile = File(...)):
+async def upload_document(document_id: str= Form(...) ,file: UploadFile = File(...)):
    temp_path = f"temp_{file.filename}"
    with open(temp_path, "wb") as buffer:
     shutil.copyfileobj(file.file, buffer)
@@ -31,7 +31,7 @@ async def upload_document(file: UploadFile = File(...)):
    chunks = chunk_text(text)
    embeddings = embed_chunks(chunks)
 
-   store_chunks(chunks, embeddings)
+   store_chunks(chunks, embeddings, document_id)
 
    os.remove(temp_path)
    return {"message": f"Stored {len(chunks)} chunks"}
