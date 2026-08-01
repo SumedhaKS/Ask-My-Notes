@@ -12,6 +12,7 @@ import path from "path";
 import crypto, { randomUUID } from "crypto";
 import axios from "axios";
 import FormData from "form-data";
+class InvalidFileTypeError extends Error { };
 
 const PORT = process.env.PORT || 3000;
 const app = express()
@@ -104,7 +105,7 @@ const upload = multer({
     limits: { fileSize: 100 * 1024 * 1024 },
     fileFilter: (req, file, cb) => {
         if (file.mimetype !== "application/pdf") {
-            return cb(new Error("Only PDF files are allowed"))
+            return cb(new InvalidFileTypeError("Only PDF files are allowed"));
         }
         cb(null, true);
     }
@@ -136,10 +137,15 @@ app.post("/upload", authMiddleware, attachDocumentId, upload.single('file'), asy
         const formData = new FormData();
         formData.append("document_id", req.documentId);
         formData.append("file", fs.createReadStream(req.file.path), req.file.filename); //streams the file instead of loading it fully into memory
-
+        console.log(process.env.INTERNAL_API_KEY, typeof process.env.INTERNAL_API_KEY)
         const aiResponse = await axios.post(`${process.env.AI_SERVICE_URL}/upload`,
             formData,
-            { headers: formData.getHeaders() }
+            {
+                headers: {
+                    ...formData.getHeaders(),
+                    "x-internal-key": process.env.INTERNAL_API_KEY
+                }
+            }
         )
 
         if (aiResponse.status !== 200) {
@@ -176,8 +182,11 @@ app.use((err: any, req: Request, res: Response, next: NextFunction) => {
         }
         return res.status(400).json({ message: err.message })
     }
-    console.log(err)
-    return res.status(500).json({ message: "Internal server error coming from global one" })
+    if (err instanceof InvalidFileTypeError) {
+        return res.status(400).json({ message: err.message })
+    }
+    console.log("Unhandled error: ", err)
+    return res.status(500).json({ message: "Internal server error" })
 })
 
 app.post("/ask", authMiddleware, async (req: any, res: Response) => {
