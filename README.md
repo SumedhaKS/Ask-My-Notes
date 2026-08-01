@@ -72,6 +72,7 @@ uv pip install -r requirements.txt
 Create a `.env` file:
 ```
 GEMINI_API_KEY=your_key_here
+INTERNAL_API_KEY=""
 ```
 Run:
 ```bash
@@ -82,7 +83,7 @@ Interactive API docs available at `http://localhost:8000/docs`.
 ### Backend
 ```bash
 cd backend
-npm install
+bun install
 ```
 Create a `.env` file:
 ```
@@ -90,17 +91,18 @@ DATABASE_URL=postgresql://user:password@localhost:5432/ask_my_notes
 JWT_SECRET=your_secret_here
 AI_SERVICE_URL=http://localhost:8000
 PORT=5000
+INTERNAL_API_KEY=""
 ```
 Run migrations and start the server:
 ```bash
-npx prisma migrate dev
-npm run dev
+bunx prisma migrate dev
+bun run dev
 ```
 
 ### Frontend
 ```bash
 cd frontend
-npm install
+pnpm install
 ```
 Create a `.env` file:
 ```
@@ -108,7 +110,7 @@ VITE_API_URL=http://localhost:5000
 ```
 Run:
 ```bash
-npm run dev
+pnpm run dev
 ```
 
 ## API Endpoints (AI Service)
