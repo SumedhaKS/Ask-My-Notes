@@ -252,5 +252,19 @@ app.get("/chat/document/:documentId", authMiddleware, async (req: any, res: Resp
     }
 })
 
+app.get("/documents", authMiddleware, async (req: any, res: Response) => {
+    try {
+        const documents = await prisma.document.findMany({
+            where: { userId: req.user.userId },
+            orderBy: { createdAt: "desc" },
+            select: { id: true, filename: true, createdAt: true }
+        });
+        return res.status(200).json({ documents })
+    }
+    catch (err) {
+        console.log(`Error while fetching documents: ${err}`);
+        return res.status(500).json({ message: "Internal server error" })
+    }
+})
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
 
