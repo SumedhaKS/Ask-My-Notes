@@ -3,7 +3,7 @@ import express, { type NextFunction, type Request, type Response } from "express
 import { userSignInSchema, userSignUpSchema } from "./types";
 import { prisma } from "./db/prisma";
 import cors from "cors";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken"
 import { authMiddleware } from "./middleware/authMiddleware";
 import multer from "multer";
@@ -224,8 +224,15 @@ app.post("/ask", authMiddleware, async (req: any, res: Response) => {
         return res.status(200).json({ message: "Answer recieved", answer: answer.data.answer })
 
     }
-    catch (err) {
-        console.log(`Error while asking question: ${err}`);  // 127.0.0.1:52880 - "POST /ask HTTP/1.1" 422 Unprocessable Entity
+    catch (err:any) {
+        if(err.response){
+            console.log("Response: ",err.response)
+            console.log("\n DATA:",err.response.data)
+            return res.status(err.response.status).json({
+                message: err.response.data?.detail || "AI service error"
+            })
+        }
+        console.log(`Error while asking question: ${err}`);
         return res.status(500).json({ message: "Internal server error" })
     }
 })
@@ -267,4 +274,3 @@ app.get("/documents", authMiddleware, async (req: any, res: Response) => {
     }
 })
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
-
