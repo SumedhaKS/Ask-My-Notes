@@ -63,7 +63,10 @@ class AskRequest(BaseModel):
 async def ask_question(body: AskRequest):
     print("Inside")
     matches = retrieve_chunks(body.question, body.document_id)
-    answer = generate_answer(body.question, matches)
+    try:
+        answer = generate_answer(body.question, matches)
+    except Exception:
+        raise HTTPException(status_code=503, detail="The AI model is temporarily busy. Please try again in a moment.")
     return {"answer": answer}
 
 # todo: While deploying, deploy as a "Private service"
