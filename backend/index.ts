@@ -21,6 +21,10 @@ app.use(express.json())
 app.use(cors())
 
 app.get("/health-check", (req: Request, res: Response) => {
+    axios.get(`${process.env.AI_SERVICE_URL}/health-check`).catch((err) => {
+        console.log(`AI service health-check failed: ${err}`)
+    })
+
     return res.json({ message: "Good" })
 })
 
@@ -144,7 +148,8 @@ app.post("/upload", authMiddleware, attachDocumentId, upload.single('file'), asy
                 headers: {
                     ...formData.getHeaders(),
                     "x-internal-key": process.env.INTERNAL_API_KEY
-                }
+                },
+                timeout: 120000
             }
         )
 
@@ -224,10 +229,10 @@ app.post("/ask", authMiddleware, async (req: any, res: Response) => {
         return res.status(200).json({ message: "Answer recieved", answer: answer.data.answer })
 
     }
-    catch (err:any) {
-        if(err.response){
-            console.log("Response: ",err.response)
-            console.log("\n DATA:",err.response.data)
+    catch (err: any) {
+        if (err.response) {
+            console.log("Response: ", err.response)
+            console.log("\n DATA:", err.response.data)
             return res.status(err.response.status).json({
                 message: err.response.data?.detail || "AI service error"
             })
